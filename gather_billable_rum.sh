@@ -90,7 +90,7 @@ main () {
   next_page="$(jq '.meta.pagination."next-page"' <<< "$workspaces_response")"
   while [ "$next_page" != 'null' ]; do
     workspaces_response=$(curl -s -H "Authorization: Bearer $TOKEN" \
-      https://$api_url/api/v2/organizations/$org_name/workspaces?page%5Bnumber%5D="$next_page")
+      https://$api_url/api/v2/organizations/$org_name/workspaces?page%5Bnumber%5D="$next_page"page%5Bsize%5D=100)
     api_error_check "$workspaces_response"
     next_page=$(jq '.meta.pagination."next-page"' <<< "$workspaces_response")
 
@@ -183,8 +183,10 @@ main () {
   fi
   all_workspaces_json+="]"
 
+  echo "$all_workspaces_json" > workspace_json.json
+
   echo $(jq -n \
-    --argjson wrkspcs "$all_workspaces_json" \
+    --slurpfile wrkspcs ./workspace_json.json \
     --arg org_name "$org_name" \
     --argjson otr "$organization_total_resources" \
     --argjson omr "$organization_managed_resources" \
@@ -200,6 +202,9 @@ main () {
       "workspace_total": $wtotal,
       "workspaces": $wrkspcs
     }')
+
+  rm -f ./workspace_json.json
 }
+
 
 main "$@"

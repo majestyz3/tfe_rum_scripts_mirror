@@ -3,6 +3,7 @@ This repo contains two scripts that can count RUM and aggregrate data for TFE in
 
 
 ## Usage
+**Note**: The Python script is multi-threaded, making it much faster than the bash script. Both scripts work, but if an organization has over 1k workspaces the Python script should be used to avoid long runtimes. The bash script takes roughly 30 minutes to run for 2k workspaces. 
 ### Python Usage
 ```
 python3 tfc_rum_count.py [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-a ADDR] [-v] [-p PATH] [-f FILE] [--csv CSV]
