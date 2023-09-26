@@ -123,7 +123,7 @@ main () {
     vercomp $terraform_version "0.11.99" && continue 
 
     workspace_billable_rum=$(jq '[.data.attributes.resources[] | select((.type|startswith("data."))
-      or .type == "terraform_data" or .type == "null_resource" | not)
+      or .type == "terraform_data" or .provider == "provider[\"registry.terraform.io/hashicorp/null\"]" | not)
       | .count] | add // 0' <<< "$state_version_response")
 
 

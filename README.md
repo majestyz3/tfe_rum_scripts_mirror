@@ -1,6 +1,7 @@
 # TFE RUM Scripts
 This repo contains two scripts that can count RUM and aggregrate data for TFE instances. These scripts use the API and count using each workspaces current state version. 
 
+The repo also contains two SQL queries. One for gathering the total RUM for a TFE organization and one for counting the total number of worksapces. These queries must be run against the TFE database. 
 
 ## Usage
 **Note**: The Python script is multi-threaded, making it much faster than the bash script. Both scripts work, but if an organization has over 1k workspaces the Python script should be used to avoid long runtimes. The bash script takes roughly 30 minutes to run for 2k workspaces. 
@@ -57,8 +58,13 @@ example) TOKEN=aaaxxxfffkkk ./gather_billable_rum.sh app.terraform.io example_or
 ```
 
 
+### SQL Script Usage
+The SQL script can be ran using any SQL agent that has permission to read from the TFE database. You must ensure the correct database is selected (`tfe`) and the database user running the query has adequate permissions. 
 
-## Example Output
+The `gather_billable_rum.sql` file contains two queries. One query to count RUM and one to count the total number of workspaces for an organization. These queries should be pasted into the SQL client separatly (or one of the queries commented out) as they are meant to be run as two distinct queries. 
+
+
+## Example Output for the Bash and Python Scripts
 These script both produce JSON output in the same format. 
 
 ```
