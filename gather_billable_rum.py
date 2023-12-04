@@ -175,7 +175,7 @@ def print_summary(rum_sum):
                     'organization_billable_rum': org_subtotal['billable_resources']})
         org_subtotal = {'billable_resources': 0, 'managed_resources': 0, 'data_resources': 0, 'total_resources': 0}
 
-    print(rum_sum)
+    print(json.dumps(rum_sum))
 
 
 # 
@@ -250,7 +250,7 @@ def process_enterprise(args):
         # Append the org summary to RUM summary 
         rum_sum.append(org_sum)
         elapsed_time = time.perf_counter() - start_time
-        print(f"Processed Org: {o['id']} in {elapsed_time:.3f} seconds")
+        logging.debug(f"Processed Org: {o['id']} in {elapsed_time:.3f} seconds")
     return rum_sum
 
 
