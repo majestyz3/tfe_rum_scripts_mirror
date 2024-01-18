@@ -21,14 +21,11 @@ if [[ $# -ne 2 ]]; then
     This script will use the TFE API to gather data about billable RUM for an
     Organization. The output tabular meant for human consumption.
 
-<<<<<<< HEAD
     This script will use the appropriate API token in the credentials.tfrc.json file for the invoking user.
     A "TOKEN" env variable can be set with a valid API token for the organization that is being accessed. 
-=======
     This script will use the appropriate API token in the credentials.tfrc.json
     file for the invoking user. A "TOKEN" env variable can optionally be set
     with a valid API token for the Organization that is being accessed. 
->>>>>>> 63caf7f (Adding README.md and help entries for gather_billable_rum-simple.sh)
 
     API_URL - the base url of the API to pull data from. ex) app.terraform.io
 
@@ -129,11 +126,8 @@ main () {
 
     api_error_check "$workspaces_response"
 
-<<<<<<< HEAD
     workspace_ids+=( $(jq -r '.data[].id' <<< "$workspaces_response") )
-=======
     workspace_ids+=( "$(jq -r '.data[].id' <<< "$workspaces_response")" )
->>>>>>> 63caf7f (Adding README.md and help entries for gather_billable_rum-simple.sh)
     workspace_names+=( $(jq -r '.data[].attributes.name' <<< "$workspaces_response") )
   done
 
