@@ -44,7 +44,7 @@ TF_TOKEN=asdfasdfuxuxuxuxu  TF_ADDR=https://my.domain.io python3 gather_billable
 
 
 ### Bash Usage
-The bash script requires [jq](https://jqlang.github.io/jq/) to work correctly. 
+The bash script requires [jq](https://jqlang.github.io/jq/) and cURL to work correctly. 
 ``` 
 ./gather_billable_rum.sh <API_URL> <ORG_NAME>
 
@@ -56,6 +56,32 @@ ORG_NAME - the name of the organization to pull data from
 
 example) TOKEN=aaaxxxfffkkk ./gather_billable_rum.sh app.terraform.io example_org
 ```
+## Simple Bash Usage
+
+Usage: ./gather_billable_rum-simple.sh <API_URL> <ORG_NAME>
+
+This script will use the TFE API to gather data about billable RUM for an
+Organization. The output tabular meant for human consumption.
+
+This script will use the appropriate API token in the credentials.tfrc.json
+file for the invoking user. A "TOKEN" env variable can optionally be set
+with a valid API token for the Organization that is being accessed. 
+
+API_URL - the base url of the API to pull data from. ex) app.terraform.io
+
+ORG_NAME - the name of the organization to pull data from
+
+Example usage:
+  ```
+  ./gather_billable_rum-simple.sh app.terraform.io example_org
+  ```
+
+  OR
+
+  ```
+  export TOKEN=aaaxxxfffkkk
+  ./gather_billable_rum-simple.sh app.terraform.io example_org
+  ```
 
 
 ### SQL Script Usage

@@ -16,18 +16,31 @@ fi
 
 # Check if the API URL and org name are provided as command-line arguments
 if [[ $# -ne 2 ]]; then
-    echo 'Usage: ./gather_billable_rum.sh <API_URL> <ORG_NAME>
+    echo 'Usage: ./gather_billable_rum-simple.sh <API_URL> <ORG_NAME>
 
-    This script will use the TFE API to gather data about billable RUM for an Organization. 
+    This script will use the TFE API to gather data about billable RUM for an
+    Organization. The output tabular meant for human consumption.
 
+<<<<<<< HEAD
     This script will use the appropriate API token in the credentials.tfrc.json file for the invoking user.
     A "TOKEN" env variable can be set with a valid API token for the organization that is being accessed. 
+=======
+    This script will use the appropriate API token in the credentials.tfrc.json
+    file for the invoking user. A "TOKEN" env variable can optionally be set
+    with a valid API token for the Organization that is being accessed. 
+>>>>>>> 63caf7f (Adding README.md and help entries for gather_billable_rum-simple.sh)
 
     API_URL - the base url of the API to pull data from. ex) app.terraform.io
 
     ORG_NAME - the name of the organization to pull data from
 
-    example) TOKEN=aaaxxxfffkkk ./gather_billable_rum.sh app.terraform.io example_org
+    Example usage:
+      `./gather_billable_rum-simple.sh app.terraform.io example_org`
+
+      OR
+
+      `export TOKEN=aaaxxxfffkkk`
+      `./gather_billable_rum-simple.sh app.terraform.io example_org`
 
 '
     exit
@@ -116,7 +129,11 @@ main () {
 
     api_error_check "$workspaces_response"
 
+<<<<<<< HEAD
     workspace_ids+=( $(jq -r '.data[].id' <<< "$workspaces_response") )
+=======
+    workspace_ids+=( "$(jq -r '.data[].id' <<< "$workspaces_response")" )
+>>>>>>> 63caf7f (Adding README.md and help entries for gather_billable_rum-simple.sh)
     workspace_names+=( $(jq -r '.data[].attributes.name' <<< "$workspaces_response") )
   done
 
