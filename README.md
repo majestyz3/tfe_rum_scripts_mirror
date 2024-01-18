@@ -56,12 +56,10 @@ ORG_NAME - the name of the organization to pull data from
 
 example) TOKEN=aaaxxxfffkkk ./gather_billable_rum.sh app.terraform.io example_org
 ```
-## Simple Bash Usage
-
-Usage: ./gather_billable_rum-simple.sh <API_URL> <ORG_NAME>
+### Simpler Bash Usage
 
 This script will use the TFE API to gather data about billable RUM for an
-Organization. The output tabular meant for human consumption.
+Organization. The output is in tabular form, meant for human consumption.
 
 This script will use the appropriate API token in the credentials.tfrc.json
 file for the invoking user. A "TOKEN" env variable can optionally be set
@@ -69,7 +67,7 @@ with a valid API token for the Organization that is being accessed.
 
 API_URL - the base url of the API to pull data from. ex) app.terraform.io
 
-ORG_NAME - the name of the organization to pull data from
+ORG_NAME - the name of the TFE/TFC Organization to pull data from
 
 Example usage:
   ```
