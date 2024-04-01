@@ -174,7 +174,7 @@ main () {
 
     all_workspaces_json+=","
 
-    ((ITER++))
+    ((++ITER))
   done
 
   # Remove the last comma and add a closing bracket if we added at least one workspace
