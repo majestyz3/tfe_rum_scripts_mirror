@@ -8,6 +8,7 @@ import logging
 import os
 import requests
 import time
+import math
 from packaging import version
 from urllib.parse import urlparse
 
@@ -63,16 +64,20 @@ def tfapi_get_data (url, headers, params):
 ## tfapi_get_state: Gets the state file resources
 ##
 def tfapi_get_state (url, headers, params):
-    resources = []
     result = tfapi_get(url, headers, params)
     data = result['data']
+    state_version = {'terraform-version': data['attributes']['terraform-version'], 'resources': []}
 
     ## Return no resources if the TF version too old
     if version.parse(data['attributes']['terraform-version']) < version.parse("0.12.0"):
-      return []  
+      return state_version
 
-    resources += data['attributes']['resources']
-    return resources
+    ## Include billable-rum-count attr if available
+    if 'billable-rum-count' in data['attributes']:
+      state_version['billable-rum-count'] = data['attributes']['billable-rum-count']
+
+    state_version['resources'] += data['attributes']['resources']
+    return state_version
 
 
 
@@ -86,10 +91,10 @@ def get_resources(ws, base_url, api_ver, headers, params):
     total = 0
     state_url = f"{base_url}{api_ver}/workspaces/{ws['id']}/current-state-version"
     
-    resources = tfapi_get_state(state_url, headers, params)
+    state_version = tfapi_get_state(state_url, headers, params)
     type_counts = {}
     provider_type_counts = {}
-    for rs in resources:
+    for rs in state_version['resources']:
         if rs['type'] not in type_counts:
           type_counts[rs['type']] = 0
         type_counts[rs['type']] += rs['count']
@@ -104,8 +109,16 @@ def get_resources(ws, base_url, api_ver, headers, params):
             data_rs += rs['count']
         else:
             rum += rs['count']
-    
-    return {'billable_resources': rum , 'data_resources': data_rs, 'managed_resources': rum+null_rs, 'total_resources':rum+null_rs+data_rs, 'resource_summary': { 'providers': type_counts, 'provider_types':provider_type_counts}}    
+
+
+    output = {'billable_resources': rum , 'data_resources': data_rs, 'managed_resources': rum+null_rs, 'total_resources':rum+null_rs+data_rs, 'resource_summary': { 'providers': type_counts, 'provider_types':provider_type_counts}}
+    if 'billable-rum-count' in state_version:
+        billable_rum_count = state_version['billable-rum-count']
+        output['incurred_billable_resources'] = state_version['billable-rum-count']
+        output['idle_billable_resources'] = math.isnan(billable_rum_count)
+        output['zero_billable_resources'] = billable_rum_count == 0
+        output['non_zero_billable_resources'] = billable_rum_count > 0
+    return output
 
 
 
@@ -154,6 +167,8 @@ def print_summary(rum_sum):
     # Initialize variables for subtotal and grand total
     org_subtotal = {'billable_resources': 0, 'managed_resources': 0, 'data_resources': 0, 'total_resources': 0}
     grand_total = {'billable_resources': 0, 'managed_resources': 0, 'data_resources': 0, 'total_resources': 0}
+    cost_optimization_total = {'total_idle_billable_resources': 0, 'total_zero_billable_resources': 0, 'total_non_zero_billable_resources': 0}
+    cost_optimization_info_enabled = False
 
     for org in rum_sum:
         for ws in org['workspaces']:
@@ -169,11 +184,23 @@ def print_summary(rum_sum):
             grand_total['data_resources'] += ws['data_resources']
             grand_total['total_resources'] += ws['total_resources']
 
+            # Accumulate cost optimization totals
+            if 'idle_billable_resources' in ws:
+                cost_optimization_total['total_idle_billable_resources'] += 1 if ws['idle_billable_resources'] else 0
+                cost_optimization_total['total_zero_billable_resources'] += 1 if ws['zero_billable_resources'] else 0
+                cost_optimization_total['total_non_zero_billable_resources'] += 1 if ws['non_zero_billable_resources'] else 0
+                # Set the flag to true if any org has cost optimization info
+                cost_optimization_info_enabled = True
+
         org.update({'organization_total_resources': org_subtotal['total_resources'], 
                     'organization_managed_resources': org_subtotal['managed_resources'], 
                     'organization_data_resources': org_subtotal['data_resources'], 
                     'organization_billable_rum': org_subtotal['billable_resources']})
         org_subtotal = {'billable_resources': 0, 'managed_resources': 0, 'data_resources': 0, 'total_resources': 0}
+
+    # Add the cost optimization totals to the bottom of the json output if enabled
+    if cost_optimization_info_enabled:
+        rum_sum.append({'cost_optimization_total': cost_optimization_total})
 
     print(json.dumps(rum_sum))
 

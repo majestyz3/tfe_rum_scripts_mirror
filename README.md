@@ -166,3 +166,98 @@ These script both produce JSON output in the same format.
 }
 
 ```
+
+## Example Output for the Python Script with additional instrumentation
+
+If available in the API, the Python script will include additional information to the output, below the full example:
+
+```
+[{
+  "organization_name": "test-org",
+  "organization_total_resources": 12949,
+  "organization_managed_resources": 12726,
+  "organization_data_resources": 223,
+  "organization_billable_rum": 12724,
+  "workspace_total": 2,
+  "workspaces": [
+    {
+      "name": "test2-workspace",
+      "total_resources": 12,
+      "managed_resources": 12,
+      "billable_resources": 10,
+      "data_resources": 0,
+      "terraform_version": "1.5.6",
+      "resource_summary": {
+        "providers": {
+          "fakewebservices_database": 1,
+          "fakewebservices_load_balancer": 1,
+          "fakewebservices_server": 7,
+          "fakewebservices_vpc": 1,
+          "null_resource": 2
+        },
+        "provider_types": {
+          "provider[\"registry.terraform.io/hashicorp/fakewebservices\"]": 10,
+          "provider[\"registry.terraform.io/hashicorp/null\"]": 2
+        }
+      },
+      "incurred_billable_resources": 10,
+      "idle_billable_resources": false,
+      "zero_billable_resources": false,
+      "non_zero_billable_resources": true
+    },
+    {
+      "name": "test",
+      "total_resources": 12937,
+      "managed_resources": 12714,
+      "billable_resources": 12714,
+      "data_resources": 223,
+      "terraform_version": "1.4.2",
+      "resource_summary": {
+        "providers": {
+          "random_password": 1,
+          "snowflake_account_grant": 1,
+          "snowflake_database": 8,
+          "snowflake_managed_account": 1,
+          "snowflake_network_policy": 19,
+          "snowflake_network_policy_attachment": 19,
+          "snowflake_oauth_integration": 2,
+          "snowflake_resource_monitor": 1,
+          "snowflake_role": 155,
+          "snowflake_role_grants": 9,
+          "snowflake_saml_integration": 1,
+          "snowflake_scim_integration": 1,
+          "snowflake_warehouse": 48,
+          "snowflake_user": 7,
+          "aws_secretsmanager_secret": 1,
+          "aws_secretsmanager_secret_version": 1,
+          "data.snowflake_schemas": 3,
+          "data.snowflake_tables": 220,
+          "snowflake_database_grant": 3,
+          "snowflake_schema_grant": 220,
+          "snowflake_share": 3,
+          "snowflake_table_grant": 12213
+        },
+        "provider_types": {
+          "provider[\"registry.terraform.io/hashicorp/random\"]": 1,
+          "provider[\"registry.terraform.io/snowflake-labs/snowflake\"]": 12670,
+          "provider[\"registry.terraform.io/snowflake-labs/snowflake\"].snowflake_sysadmin": 56,
+          "provider[\"registry.terraform.io/snowflake-labs/snowflake\"].snowflake_securityadmin": 208,
+          "provider[\"registry.terraform.io/hashicorp/aws\"]": 2
+        }
+      },
+      "incurred_billable_resources": 12714,
+      "idle_billable_resources": false,
+      "zero_billable_resources": false,
+      "non_zero_billable_resources": true
+    }
+  ]
+},
+{
+  "cost_optimization_totals: {
+    "total_idle_billable_resources": 0,
+    "total_zero_billable_resources": 0,
+    "total_non_zero_billable_resources": 2
+  }
+}]
+
+```
