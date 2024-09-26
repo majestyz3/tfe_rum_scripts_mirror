@@ -1,11 +1,15 @@
 # TFE RUM Scripts
-This repo contains two scripts that can count RUM and aggregrate data for TFE instances. These scripts use the API and count using each workspaces current state version. 
+This repo contains scripts that can count RUM and aggregrate data for TFE instances. These scripts use the API and count using each workspaces current state version. 
 
 The repo also contains two SQL queries. One for gathering the total RUM for a TFE organization and one for counting the total number of worksapces. These queries must be run against the TFE database. 
 
 ## Usage
-**Note**: The Python script is multi-threaded, making it much faster than the bash script. Both scripts work, but if an organization has over 1k workspaces the Python script should be used to avoid long runtimes. The bash script takes roughly 30 minutes to run for 2k workspaces. 
+
+Below usage instructions for Python and Bash scripts, for the rails console version check [this README.md](tfectl_rails_console/README.md).
+
 ### Python Usage
+
+**Note**: The Python script is multi-threaded, making it much faster than the bash script. Both scripts work, but if an organization has over 1k workspaces the Python script should be used to avoid long runtimes. The bash script takes roughly 30 minutes to run for 2k workspaces. 
 ```
 python3 tfc_rum_count.py [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-a ADDR] [-v] [-p PATH] [-f FILE] [--csv CSV]
 
