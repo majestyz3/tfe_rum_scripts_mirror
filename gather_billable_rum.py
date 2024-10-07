@@ -11,6 +11,8 @@ import time
 from packaging import version
 from urllib.parse import urlparse
 
+NO_PROJECTS_ID = "prj-000000"
+
 ##
 ## tfapi_get: makes a single request and throttles thread in the case of a 429
 ##
@@ -143,6 +145,12 @@ def parse_arguments():
         '--file',
         help="Output file for results (COMING SOON)"
     )
+    parser.add_argument(
+        '-o',
+        '--organization',
+        default=None,
+        help="Limit results to one organization. Default: all organizations your token can access."
+    )
     return parser.parse_args()
 
 
@@ -156,19 +164,20 @@ def print_summary(rum_sum):
     grand_total = {'billable_resources': 0, 'managed_resources': 0, 'data_resources': 0, 'total_resources': 0}
 
     for org in rum_sum:
-        for ws in org['workspaces']:
-            # Accumulate subtotal for the organization
-            org_subtotal['billable_resources'] += ws['billable_resources']
-            org_subtotal['data_resources'] += ws['data_resources']
-            org_subtotal['managed_resources'] += ws['managed_resources']
-            org_subtotal['total_resources'] += ws['total_resources']
-
-            # Accumulate grand total
-            grand_total['billable_resources'] += ws['billable_resources']
-            grand_total['managed_resources'] += ws['managed_resources']
-            grand_total['data_resources'] += ws['data_resources']
-            grand_total['total_resources'] += ws['total_resources']
-
+        for p in org['projects']:
+          for ws in p['workspaces']:
+              # Accumulate subtotal for the organization
+              org_subtotal['billable_resources'] += ws['billable_resources']
+              org_subtotal['data_resources'] += ws['data_resources']
+              org_subtotal['managed_resources'] += ws['managed_resources']
+              org_subtotal['total_resources'] += ws['total_resources']
+  
+              # Accumulate grand total
+              grand_total['billable_resources'] += ws['billable_resources']
+              grand_total['managed_resources'] += ws['managed_resources']
+              grand_total['data_resources'] += ws['data_resources']
+              grand_total['total_resources'] += ws['total_resources']
+  
         org.update({'organization_total_resources': org_subtotal['total_resources'], 
                     'organization_managed_resources': org_subtotal['managed_resources'], 
                     'organization_data_resources': org_subtotal['data_resources'], 
@@ -220,15 +229,24 @@ def process_enterprise(args):
 
     # Iterate over each org
     for o in org_response:
+        if args.organization:
+            if o['id'] != args.organization:
+                continue
         start_time = time.perf_counter()
         org_sum = {}  # Initialize org summary
         org_sum['organization_name'] = o['id'] # Set the id to org_id being processed
         org_sum['workspace_total'] = 0 # Start counting the total workspaces
-        org_sum['workspaces'] = [] # Initialize the list of workspaces for the org
+        org_sum['project_total'] = 0 # Start counting the total projects
+        org_sum['projects'] = [] # Initialize the list of workspaces for the org
 
         ws_url = f"{base_url}{api_ver}/organizations/{o['id']}/workspaces" # build the url for ws list
         workspaces = tfapi_get_data(ws_url, headers, params) # Get all the workspaces for the org
 
+        proj_url = f"{base_url}{api_ver}/organizations/{o['id']}/projects" # build the url for projects list
+        projects = tfapi_get_data(proj_url, headers, params) # Get all the projects for the org
+
+        # Projects map will contain all the workspace data, indexed by project, as well as project totals
+        projects_map = process_projects(projects)
         if workspaces is None:
             continue
 
@@ -244,8 +262,21 @@ def process_enterprise(args):
 
             for ws_sum in workspace_results:
                 org_sum["workspace_total"] += 1
-                org_sum['workspaces'].append(ws_sum)
-        # Multi-Threaded
+                if 'project_id' in ws_sum:
+                    project_key = ws_sum['project_id']
+                else:
+                    project_key = NO_PROJECTS_ID
+                projects_map[project_key]['workspaces'].append(ws_sum)
+                projects_map[project_key]['billable_resources'] += ws_sum['billable_resources']
+        # End Multi-Threaded
+
+        # Convert the projects map into a list of projects
+        for p_id, p in projects_map.items():
+            org_sum['project_total'] += 1
+            org_sum['projects'].append({'name': p['attributes']['name'],
+                                        'id' : p_id,
+                                        'billable_resources': p['billable_resources'],
+                                        'workspaces': p['workspaces']})
 
         # Append the org summary to RUM summary 
         rum_sum.append(org_sum)
@@ -253,6 +284,29 @@ def process_enterprise(args):
         logging.debug(f"Processed Org: {o['id']} in {elapsed_time:.3f} seconds")
     return rum_sum
 
+
+#
+# process_projects: Helper fxn, convert a list of project maps to a map indexed by project ID
+#
+def process_projects(projects):
+    projects_map = {}
+    if projects == None:
+        projects_map = {
+            NO_PROJECTS_ID : {
+                'workspaces': [],
+                'billable_resources': 0,
+                'attributes' : {
+                    'name': 'Default Project'
+                }
+            }
+        }
+    else:
+        for p in projects:
+            logging.info(f"Processing project: {p['id']}")
+            projects_map[p['id']] = p
+            projects_map[p['id']]['workspaces'] = []
+            projects_map[p['id']]['billable_resources'] = 0
+    return projects_map
 
 
 #
@@ -264,6 +318,8 @@ def process_workspace(ws, base_url, api_ver, headers, params):
     ws_sum['id'] = ws['id']
     ws_sum['name'] = ws['attributes']['name']
     ws_sum['terraform_version'] = ws['attributes']['terraform-version']
+    if 'project' in ws['relationships']:
+        ws_sum['project_id'] = ws['relationships']['project']['data']['id']
     rs_sum = {'billable_resources': 0, 'managed_resources': 0, 'data_resources': 0, 'total_resources': 0}
     if ws['attributes']['resource-count'] > 0:
         rs_sum = get_resources(ws, base_url, api_ver, headers, params)   
