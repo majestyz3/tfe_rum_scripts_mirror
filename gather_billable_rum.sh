@@ -97,7 +97,7 @@ main () {
     workspace_ids+=($(echo $workspaces_response | jq -r '.data[].id'))
     workspace_names+=($(echo $workspaces_response | jq -r '.data[].attributes.name'))
   done
-  
+
   declare all_workspaces_json="["
 
   declare -i organization_billable_rum=0
@@ -114,13 +114,17 @@ main () {
     workspace_name="${workspace_names[ITER]}"
 
     if echo "$state_version_response" | jq -e '.errors' &> /dev/null; then 
+      ((++ITER))
       continue
     fi
 
     terraform_version=$(jq -rc '.data.attributes."terraform-version"' <<< "$state_version_response")
 
     # Skip TF versions below 0.12.0
-    vercomp $terraform_version "0.11.99" && continue 
+    if vercomp $terraform_version "0.11.99"; then
+      ((++ITER))
+      continue
+    fi
 
     workspace_billable_rum=$(jq '[.data.attributes.resources[] | select((.type|startswith("data."))
       or .type == "terraform_data" or .provider == "provider[\"registry.terraform.io/hashicorp/null\"]" | not)
