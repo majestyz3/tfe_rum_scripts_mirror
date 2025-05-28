@@ -25,7 +25,7 @@ JOIN rails.organizations o on o.id = r.organization_id
 WHERE 
   r.resources_type <> 'terraform_data'
   AND r.resources_provider <> 'provider["registry.terraform.io/hashicorp/null"]'
-  AND r.resources_type NOT like 'data%';
+  AND r.resources_type NOT like 'data.%';
 
 
 

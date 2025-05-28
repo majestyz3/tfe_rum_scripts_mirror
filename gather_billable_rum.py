@@ -102,7 +102,7 @@ def get_resources(ws, base_url, api_ver, headers, params):
 
         if rs['provider'] == 'provider[\"registry.terraform.io/hashicorp/null\"]':
             null_rs += rs['count']
-        elif rs['type'].startswith("data") or rs['type'] == "terraform_data":
+        elif rs['type'].startswith("data.") or rs['type'] == "terraform_data":
             data_rs += rs['count']
         else:
             rum += rs['count']
