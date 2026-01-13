@@ -25,3 +25,28 @@ commercial solution and has access to all of their state files at a local path.
 
 ## Notes
 * The script currently can search a single path for any file suffixed with `.tfstate`
+
+## Usage
+```
+python3 count_terraform_resources_from_file_state.py [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-v] [-p PATH]
+
+Script to output basic state file info (filename, TF version, # resources) as well as an accurate RUM count.
+
+options:
+  -h, --help            show this help message and exit
+  -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
+                        Set the logging level (default: ERROR)
+  -v, --verbose         Verbose will print details for every organization, otherwise only a summary table will appear.
+  -p PATH, --path PATH  Path where state files are stored.
+```
+
+## Sample for TF CE:
+```
+Name                                    Version      Billable RUM   Data RS   Null RS     Total
+state1.tfstate                          1.9.3                   1         0         0         1
+terraform.tfstate                       1.14.0                124        35         0       159
+state2.tfstate                          1.9.3                   1         0         0         1
+
+Grand Total:
+                                                              126        35         0       161
+```

@@ -87,46 +87,15 @@ Example usage:
   ./gather_billable_rum-simple.sh app.terraform.io example_org
   ```
 
-### Simple Terraform Community Edition State File RUM Estimation
-
-## Usage
-```
-python3 tf-ce-count.py [-h] [-l {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-a ADDR] [-v] [-p PATH] [-f FILE] [--csv CSV]
-
-Script to output basic Workspace Info (workspace ID, name, version, # resources) as well as an accurate RUM count.
-
-options:
-  -h, --help            show this help message and exit
-  -l {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
-                        Set the logging level (default: ERROR)
-  -a ADDR, --addr ADDR  URL for your TFE Server (default: 'https://app.terraform.io')
-  -v, --verbose         Verbose will print details for every organization, otherwise only a summary table will appear.
-  -p PATH, --path PATH  Path where state files are stored.
-  -f FILE, --file FILE  Output file for results   (*** COMING SOON ***)
-  --csv CSV             Output in CSV format      (*** COMING SOON ***)
-```
-## Requires Requests Module
-```$ python -m pip install requests```
-
-## Sample for TF CM:
-```
-ID                  Name                                    Version   Last Updated Resource Count        RUM   Data RS   Null RS     Total
-
-Org ID: /Users/rryjewski/sandbox/github/brightblueray/tfc-rum-basic/samples
-n/a                 terraform (1).tfstate                   1.0.9     2023-06-22   0                      25         0         0        25
-n/a                 terraform.tfstate                       0.12.17   2023-06-22   0                      42         0         0        42
-Org Subtotal:
-                                                                                                          67         0         0        67
-
-Grand Total:
-                                                                                                          67         0         0        67
-```
-
 ### SQL Script Usage
 The SQL script can be ran using any SQL agent that has permission to read from the TFE database. You must ensure the correct database is selected (`tfe`) and the database user running the query has adequate permissions. 
 
 The `gather_billable_rum.sql` file contains two queries. One query to count RUM and one to count the total number of workspaces for an organization. These queries should be pasted into the SQL client separatly (or one of the queries commented out) as they are meant to be run as two distinct queries. 
 
+
+## Community Edition support
+
+Please reference the [./ce](./ce) directory for support for counting RUM for community edition Terraform users.
 
 ## Example Output for the Bash Script
 ```

@@ -51,8 +51,8 @@ def print_summary(rum_sum):
     grand_total = {'rum': 0, 'null_rs': 0, 'data_rs': 0, 'total': 0}
 
     # Define the column headers with right-justification
-    headers = ["Name", "Version", "Resource Count", "RUM", "Data RS", "Null RS", "Total"]
-    header_format = "{:<40}{:<10}{:<15}{:>10}{:>10}{:>10}{:>10}"
+    headers = ["Name", "Version", "Billable RUM", "Data RS", "Null RS", "Total"]
+    header_format = "{:<40}{:<10}{:>15}{:>10}{:>10}{:>10}"
     print(header_format.format(*headers))
 
     for state in rum_sum:
@@ -64,10 +64,10 @@ def print_summary(rum_sum):
         # Define the row values with right-justification
         row_values = [
             state['name'], state['terraform-version'],
-            state['resource-count'], state['resources']['rum'],
+            state['resources']['rum'],
             state['resources']['data_rs'], state['resources']['null_rs'], state['resources']['total']
         ]
-        row_format = "{:<40}{:<10}{:<15}{:>10}{:>10}{:>10}{:>10}"
+        row_format = "{:<40}{:<10}{:>15}{:>10}{:>10}{:>10}"
         print(row_format.format(*row_values))
 
         # Accumulate grand total
@@ -78,7 +78,7 @@ def print_summary(rum_sum):
 
     # Print grand total row
     print(f"\nGrand Total:")
-    print(row_format.format('', '', '', grand_total['rum'], grand_total['data_rs'], grand_total['null_rs'], grand_total['total']))
+    print(row_format.format('', '', grand_total['rum'], grand_total['data_rs'], grand_total['null_rs'], grand_total['total']))
 
 
 
@@ -106,7 +106,6 @@ def process_oss(path):
         print(f"Processing statefile: {state['id']}")
         state_sum = {}
         state_sum['name'] = state['id']
-        state_sum['resource-count'] = 0
         state_sum['terraform-version'] = state['terraform_version']
         resources = state['resources']
         rum = 0
