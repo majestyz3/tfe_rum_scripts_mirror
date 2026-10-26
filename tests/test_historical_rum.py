@@ -3,7 +3,7 @@ import datetime as dt
 import unittest
 from unittest.mock import patch
 
-from gather_historical_rum import month_starts, cutoff, rum_from_attributes, report, UTC
+from gather_historical_rum import month_starts, cutoff, rum_from_attributes, report, add_growth, UTC
 
 
 class FakeAPI:
@@ -46,6 +46,30 @@ class Tests(unittest.TestCase):
         self.assertEqual([x["rum"] for x in summary], [0, 5, 5, 9])
         self.assertTrue(all(x["complete"] for x in summary))
         self.assertEqual(len(rows), 3)
+
+    def test_growth_complete_and_zero_baseline(self):
+        rows = [{"month": "2026-01", "rum": 0},
+                {"month": "2026-02", "rum": 100},
+                {"month": "2026-03", "rum": 125},
+                {"month": "2026-04", "rum": None},
+                {"month": "2026-05", "rum": 140}]
+        add_growth(rows)
+        self.assertIsNone(rows[0]["growth_rum"])
+        self.assertEqual(rows[1]["growth_rum"], 100)
+        self.assertIsNone(rows[1]["growth_percent"])
+        self.assertEqual(rows[2]["growth_rum"], 25)
+        self.assertEqual(rows[2]["growth_percent"], 25.0)
+        self.assertIsNone(rows[3]["growth_rum"])
+        self.assertIsNone(rows[4]["growth_rum"])
+
+    def test_workspace_growth_separated(self):
+        rows = [{"workspace_id": "a", "rum": 5},
+                {"workspace_id": "a", "rum": 9},
+                {"workspace_id": "b", "rum": 100},
+                {"workspace_id": "b", "rum": 90}]
+        add_growth(rows, ("workspace_id",))
+        self.assertEqual([r["growth_rum"] for r in rows], [None, 4, None, -10])
+        self.assertEqual(rows[-1]["growth_percent"], -10.0)
 
     def test_unknown_before_first_retained_state(self):
         class Missing(FakeAPI):
