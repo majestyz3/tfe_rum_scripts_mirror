@@ -156,7 +156,39 @@ def report(api, organization, months):
                         "rum": data["known_rum"] if data["unknown_workspaces"] == 0 else None,
                         **data,
                         "complete": data["unknown_workspaces"] == 0})
+    add_growth(summary)
+    # Details are ordered by workspace and then month, so growth is within each workspace.
+    add_growth(details, ("workspace_id",))
     return summary, details
+
+
+def add_growth(rows, key_fields=()):
+    """Month-over-month changes only when both snapshots are known."""
+    previous = {}
+    for row in rows:
+        key = tuple(row[field] for field in key_fields)
+        current = row["rum"]
+        prior = previous.get(key)
+        row["previous_month_rum"] = prior
+        row["growth_rum"] = None if prior is None or current is None else current - prior
+        row["growth_percent"] = (
+            None if row["growth_rum"] is None or prior == 0
+            else round(100 * row["growth_rum"] / prior, 2)
+        )
+        # Report no percent change for a zero baseline; absolute growth remains valid.
+        previous[key] = current
+    return rows
+
+
+def print_monthly_summary(rows):
+    print("\\nHistorical monthly RUM and growth (estimated month-end):")
+    print(f'{"Month":<10} {"RUM":>12} {"Change":>12} {"Growth":>11} {"Coverage":>12}')
+    for r in rows:
+        fmt = lambda value: "N/A" if value is None else f"{value:,}"
+        pct = "N/A" if r["growth_percent"] is None else f'{r["growth_percent"]:+.2f}%'
+        coverage = "complete" if r["complete"] else "incomplete"
+        print(f'{r["month"]:<10} {fmt(r["rum"]):>12} '
+              f'{fmt(r["growth_rum"]):>12} {pct:>11} {coverage:>12}')
 
 
 def write_csv(path, rows, columns):
@@ -196,13 +228,16 @@ def main():
         parser.exit(1, f"Historical RUM collection failed: {exc}\n")
     write_csv(out / "monthly_rum.csv", summary,
               ["month", "organization", "rum", "known_rum", "known_workspaces",
-               "unknown_workspaces", "excluded_not_created", "complete"])
+               "unknown_workspaces", "excluded_not_created", "complete",
+               "previous_month_rum", "growth_rum", "growth_percent"])
     write_csv(out / "workspace_monthly_rum.csv", details,
               ["month", "organization", "workspace_id", "workspace", "rum",
-               "status", "state_version_id"])
+               "status", "state_version_id", "previous_month_rum",
+               "growth_rum", "growth_percent"])
     with open(out / "historical_rum.json", "w", encoding="utf-8") as stream:
         json.dump({"organization": args.organization, "summary": summary,
                    "workspace_months": details}, stream, indent=2)
+    print_monthly_summary(summary)
     print(f"Wrote {len(summary)} monthly rows and {len(details)} workspace-month rows to {out}")
     if any(not row["complete"] for row in summary):
         print("WARNING: Some months are incomplete; see unknown_workspaces and workspace_monthly_rum.csv",
