@@ -539,7 +539,7 @@ python3 gather_historical_rum.py \
 
 The script writes three independent files (and does not overwrite current-RUM results):
 - `historical_rum_output/monthly_rum.csv`: one row per UTC calendar month; `rum` is blank when any workspace lacks a reliable count. `known_rum` is only the partial known subtotal.
-- `historical_rum_output/workspace_monthly_rum.csv`: workspace-month snapshot counts, status (`known`, `no_retained_state`, or `unavailable_resources`) and chosen state version ID.
+- `historical_rum_output/workspace_monthly_rum.csv`: workspace-month snapshot counts and workspace-specific month-over-month growth, status (`known`, `no_retained_state`, or `unavailable_resources`) and chosen state version ID.
 - `historical_rum_output/historical_rum.json`: both reports in JSON.
 
 **Method:** Uses the documented read-only `GET /api/v2/state-versions` endpoint (filtered by organization, workspace, and finalized status), chooses the latest non-intermediate retained state at or before each UTC month boundary, then uses its `billable-rum-count` when available or the same resource exclusions used by the current-RUM Python collector. For the in-progress current month, it uses the snapshot available as of execution time. State versions are read through the individual state-version API when list metadata does not include counts. Only currently listed workspaces are discovered.
@@ -547,3 +547,22 @@ The script writes three independent files (and does not overwrite current-RUM re
 **Interpretation and caveats:** This is **reconstructed month-end state inventory**, *not* the official monthly billable usage calculation or an invoice reconciliation. Historical states must still be retained. Workspaces deleted before the run are not discovered; renamed workspaces and missing/retained state gaps can affect results. Months before a workspace's first retained state are marked unknown (not zero), even if it had zero resources then. Months before workspace creation are excluded when creation timestamps are available. A state timestamp is when the version was created, not necessarily the exact time resources changed. Older versions may lack extracted resource information; such months are unknown. The report intentionally leaves organization-level RUM blank for incomplete months rather than silently undercounting. Running this against many workspaces with long histories can make many API requests and require time. Keep `TF_TOKEN` private; state versions can contain sensitive data.
 
 API references: [State Versions API](https://developer.hashicorp.com/terraform/enterprise/api-docs/state-versions) and [Terraform state history](https://developer.hashicorp.com/terraform/enterprise/workspaces/state).
+
+
+### Monthly growth interpretation
+
+The historical script prints a month-by-month table to the terminal, and both CSV reports include:
+- `rum`: estimated end-of-month RUM (blank when history is incomplete);
+- `previous_month_rum`: immediately preceding requested month's RUM;
+- `growth_rum`: `rum - previous_month_rum` (negative means shrinkage);
+- `growth_percent`: `100 * growth_rum / previous_month_rum`, rounded to two decimal places.
+
+The first month has no growth baseline. Growth is blank when either adjacent month is incomplete; it does not silently bridge missing months. When the preceding month is zero, percentage growth is undefined and blank, but the absolute RUM change is shown. For meaningful month-over-month comparisons use a continuous range of months. The in-progress current month is a partial-month snapshot, not a completed month-end value.
+
+Example (illustrative):
+
+| Month | RUM | Growth RUM | Growth % |
+| --- | ---: | ---: | ---: |
+| 2026-01 | 12,000 | N/A | N/A |
+| 2026-02 | 12,600 | +600 | +5.00% |
+| 2026-03 | 13,230 | +630 | +5.00% |
